@@ -26,7 +26,7 @@ def load_qa_chain():
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
     # 載入 FAISS 資料庫（假設你已儲存在 faiss_index/）
-    vectorstore = FAISS.load_local("faiss_index", embedding=embedding_model)
+    vectorstore = FAISS.load_local("faiss_index", embeddings=embedding_model, allow_dangerous_deserialization=True)
 
     # 建立 QA Chain
     qa_chain = RetrievalQA.from_chain_type(
