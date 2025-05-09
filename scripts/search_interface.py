@@ -13,10 +13,10 @@ def search_similar_cases(query, top_k=3):
     query_vec = model.encode([query])
 
     # 載入 FAISS index
-    index = faiss.read_index("faiss_index/index_file.index")
+    index = faiss.read_index("faiss_index/fraud_cases.index")
 
     # 載入 labels（你可以從 data/final.csv 再度讀入）
-    df = pd.read_csv("data/final.csv")
+    df = pd.read_csv("data/fraud_data.csv")
 
     # 做搜尋
     D, I = index.search(np.array(query_vec), k=top_k)
