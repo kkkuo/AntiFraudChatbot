@@ -1,28 +1,20 @@
-# scripts/search_interface.py
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
 
-import numpy as np
-import faiss
-import pandas as pd
-from sentence_transformers import SentenceTransformer
+def load_vectorstore():
+    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    vectorstore = FAISS.load_local("faiss_index", embedding=embedding_model)
+    return vectorstore
 
-def search_similar_cases(query, top_k=3):
-    # 載入模型
-    model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+def search(query, k=3):
+    vectorstore = load_vectorstore()
+    results = vectorstore.similarity_search(query, k=k)
 
-    # 編碼查詢句子
-    query_vec = model.encode([query])
+    for i, res in enumerate(results):
+        print(f"第 {i+1} 筆結果：")
+        print(res.page_content)
+        print("-" * 40)
 
-    # 載入 FAISS index
-    index = faiss.read_index("faiss_index/fraud_cases.index")
-
-    # 載入 labels（你可以從 data/final.csv 再度讀入）
-    df = pd.read_csv("data/fraud_data.csv")
-
-    # 做搜尋
-    D, I = index.search(np.array(query_vec), k=top_k)
-
-    # 顯示搜尋結果
-    for idx in I[0]:
-        print("相似案例：", df.iloc[idx]['Summary'])
-        print("詐騙類型：", df.iloc[idx]['CaseTitle'])
-        print("-" * 30)
+if __name__ == "__main__":
+    user_query = input("請輸入你的查詢：")
+    search(user_query)

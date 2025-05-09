@@ -1,38 +1,28 @@
-import torch
-import numpy as np
 import pandas as pd
-import faiss
-from sentence_transformers import SentenceTransformer
 from pathlib import Path
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
 
-def embed_and_save_faiss():
+def embed_and_save_faiss_langchain():
     # 載入資料
     data_path = Path("data/fraud_data.csv")
     df = pd.read_csv(data_path)
 
-    # 準備文本
+    # 準備文本（合併標題與摘要）
     texts = (df['CaseTitle'] + '。' + df['Summary']).tolist()
 
-    # 載入模型
-    model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
-    
-    # 檢查是否有 CUDA
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    
-    # 產生嵌入向量
-    embeddings = model.encode(texts, show_progress_bar=True, device=device)
+    # 建立 LangChain 嵌入器（用相同模型）
+    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 
-    # 建立 FAISS 索引
-    dimension = embeddings.shape[1]
-    index = faiss.IndexFlatL2(dimension)
-    index.add(np.array(embeddings))
+    # 建立 FAISS 向量資料庫
+    vectorstore = FAISS.from_texts(texts, embedding=embedding_model)
 
     # 儲存 FAISS index
     index_dir = Path("faiss_index")
     index_dir.mkdir(parents=True, exist_ok=True)
-    faiss.write_index(index, str(index_dir / "fraud_cases.index"))
+    vectorstore.save_local(str(index_dir))
 
-    print(f"✅ 已建立並儲存 {len(texts)} 筆資料的 FAISS index")
+    print(f"✅ 已用 LangChain 建立並儲存 {len(texts)} 筆資料的 FAISS index")
 
 if __name__ == "__main__":
-    embed_and_save_faiss()
+    embed_and_save_faiss_langchain()
