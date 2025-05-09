@@ -8,6 +8,8 @@ def embed_and_save_faiss_langchain():
     data_path = Path("data/fraud_data.csv")
     df = pd.read_csv(data_path)
 
+    df.fillna("", inplace=True)
+
     # 準備文本（合併標題與摘要）
     texts = (df['CaseTitle'] + '。' + df['Summary']).tolist()
 
