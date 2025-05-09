@@ -17,6 +17,5 @@ A chatbot designed for fraud prevention.
 ├── faiss_index/             # 儲存 FAISS 向量索引檔
 │   └── index_file.index     # 實際 index 檔
 │
-├── requirements.txt         # 紀錄 pip 套件需求
 ├── README.md                # 專案說明文件
 └── .gitignore               # 忽略像是 __pycache__、.ipynb_checkpoints 等
