@@ -6,7 +6,7 @@ def load_vectorstore():
     embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
     
     # 從本地載入 FAISS 向量資料庫
-    vectorstore = FAISS.load_local("faiss_index", embedding=embedding_model)
+    vectorstore = FAISS.load_local("faiss_index", embeddings=embedding_model, allow_dangerous_deserialization=True)
     
     return vectorstore
 
