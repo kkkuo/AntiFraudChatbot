@@ -7,7 +7,6 @@
 ## 📁 專案架構
 
 ```bash
-.
 ├── data/
 │   ├── raw.json              # 原始詐騙資料（從 165 網站抓取）
 │   └── fraud_data.csv        # 處理後的清理資料
@@ -37,19 +36,23 @@ pip install -r requirements.txt
 !pip install sentence-transformers langchain langchain-community faiss-cpu
 ```
 ### 2️⃣ 執行流程
-# 下載資料
+#### 抓取最新詐騙案例資料
+如果不需抓取最新的資料則不需執行
 ```
 python scripts/fetch_data.py
 ```
-# 處理成 CSV
+#### 對抓下來的資料進行前處理
+將資料留下需要的欄位，並存成csv檔
 ```
 python scripts/prepare_dataset.py
 ```
-# 建立向量資料庫
+#### 建立向量資料庫
+透過 LangChain 套件，將前一步驟擷取的資料建立為 FAISS 向量資料庫
 ```
 python scripts/embed_and_index.py
 ```
-# 啟動問答系統查詢
+#### 啟動問答系統查詢
+結合先前建置的向量資料庫與生成式模型，完成 RAG 應用
 ```
 python scripts/qa_interface.py
 ```
