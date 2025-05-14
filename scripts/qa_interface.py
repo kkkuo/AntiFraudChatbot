@@ -1,4 +1,5 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from langchain.prompts import PromptTemplate
 from langchain_community.llms import HuggingFacePipeline
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import FAISS
@@ -27,12 +28,31 @@ def load_qa_chain():
 
     # 載入 FAISS 資料庫（假設你已儲存在 faiss_index/）
     vectorstore = FAISS.load_local("faiss_index", embeddings=embedding_model, allow_dangerous_deserialization=True)
+    
+    PROMPT_TEMPLATE = """你是一位專業的反詐騙諮詢助手。使用者會告訴你他遇到的情況，並詢問你是否可能遇到詐騙。請根據以下背景資料，清楚地回答使用者的問題。
+    如果找不到相關資訊，請建議使用者撥打165反詐騙專線，並且告訴使用者「這很有可能是詐騙」。
+
+    背景資料：
+    {context}
+
+    使用者問題：
+    {question}
+
+    請用繁體中文回答，語氣親切且專業。
+    如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
+    """
+
+    PROMPT = PromptTemplate(
+        input_variables=["context", "question"],
+        template=PROMPT_TEMPLATE
+    )
 
     # 建立 QA Chain
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         retriever=vectorstore.as_retriever(),
-        return_source_documents=True
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": PROMPT}
     )
 
     return qa_chain
@@ -40,10 +60,9 @@ def load_qa_chain():
 def run_qa(query):
     qa_chain = load_qa_chain()
     result = qa_chain.invoke(query)
+    print(result["result"])
 
-    print("🔎 問題：", query)
-    print("\n📘 回答：", result["result"])
-    print("\n📎 相關資料來源：")
+    print("相關資料來源：")
     for doc in result["source_documents"]:
         print(doc.page_content)
         print("-" * 40)
