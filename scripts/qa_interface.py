@@ -81,11 +81,11 @@ def load_conversational_retrieval_chain():
 def run_qa(query, chat_history): # 修改 run_qa 接受 chat_history
     conversation_chain = load_conversational_retrieval_chain()
     if conversation_chain:
-        result = conversation_chain.invoke({"question": query, "chat_history": chat_history}) # 傳遞 chat_history
-        print(result["answer"])
-        return result["chat_history"] # 返回更新後的 chat_history
+        result = conversation_chain.invoke({"question": query, "chat_history": chat_history})
+        answer = result["answer"]
+        return answer, result["chat_history"]  # ⬅️ 同時回傳 answer 和 chat_history
     else:
         print("警告：ConversationalRetrievalChain 初始化失敗。")
-        return chat_history
+        return "系統初始化失敗", chat_history
 
 
