@@ -57,6 +57,7 @@ def load_conversational_retrieval_chain():
 
         memory = ConversationBufferMemory(
             memory_key="chat_history",
+            input_key="question",  # Add this to specify what to store
             return_messages=False
         )
 
@@ -66,7 +67,8 @@ def load_conversational_retrieval_chain():
             retriever=retriever,
             combine_docs_chain=combine_docs_chain,
             memory=memory,
-            return_source_documents=True
+            return_source_documents=True,
+            get_chat_history=lambda h: h  # Simple passthrough function
         )
 
     return _conversation_chain
