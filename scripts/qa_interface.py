@@ -78,23 +78,14 @@ def load_conversational_retrieval_chain():
         )
     return _conversation_chain
 
-def run_qa(query):
+def run_qa(query, chat_history): # 修改 run_qa 接受 chat_history
     conversation_chain = load_conversational_retrieval_chain()
     if conversation_chain:
-        result = conversation_chain.invoke({"question": query})
+        result = conversation_chain.invoke({"question": query, "chat_history": chat_history}) # 傳遞 chat_history
         print(result["answer"])
-        return result["answer"]
+        return result["chat_history"] # 返回更新後的 chat_history
     else:
         print("警告：ConversationalRetrievalChain 初始化失敗。")
-        return None
+        return chat_history
 
-# 測試用 (如果你直接執行這個檔案)
-if __name__ == "__main__":
-    query1 = "你好，我接到一通電話說我的包裹寄丟了，要我提供身分證字號和銀行帳戶，這是詐騙嗎？"
-    run_qa(query1)
-    query2 = "那如果他們說要我操作ATM呢？"
-    run_qa(query2)
-    query3 = "最近有什麼新的詐騙手法嗎？"
-    run_qa(query3)
-    query4 = "今天天氣真好。"
-    run_qa(query4)
+
