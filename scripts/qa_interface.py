@@ -3,15 +3,18 @@ from langchain.prompts import PromptTemplate
 from langchain_community.llms import HuggingFacePipeline
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.chains import ConversationalRetrievalChain
+from langchain.chains import LLMChain
 from langchain.chains.combine_documents import StuffDocumentsChain
-from langchain.memory import ConversationBufferMemory
 
-_conversation_chain = None
+_llm = None
+_retriever = None
+_prompt = None
 
-def load_conversational_retrieval_chain():
-    global _conversation_chain
-    if _conversation_chain is None:
+def load_model_and_components():
+    global _llm, _retriever, _prompt
+    
+    if _llm is None:
+        # Load model components
         model_id = "ziqingyang/chinese-alpaca-2-7b"
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         model = AutoModelForCausalLM.from_pretrained(
@@ -21,54 +24,78 @@ def load_conversational_retrieval_chain():
         )
 
         pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, max_new_tokens=512, do_sample=True)
-        llm = HuggingFacePipeline(pipeline=pipe)
+        _llm = HuggingFacePipeline(pipeline=pipe)
 
+    if _retriever is None:
+        # Load vector database and retriever
         embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         try:
             vectorstore = FAISS.load_local("faiss_index", embeddings=embedding_model, allow_dangerous_deserialization=True)
-            retriever = vectorstore.as_retriever()
+            _retriever = vectorstore.as_retriever()
         except Exception as e:
             print(f"❌ 載入 FAISS 資料庫失敗: {e}")
-            return None
+            return None, None, None
 
+    if _prompt is None:
+        # Define prompt template
         PROMPT_TEMPLATE = """你是一位專業的反詐騙諮詢助手。請根據提供的背景資料和對話歷史，清楚地回答使用者的問題。
-                            如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
-                            如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
-                            如果問題與詐騙無關，請說「這不是詐騙」，並提供具體理由。
-                            如果找不到資訊，請建議撥打165專線，並說「這很有可能是詐騙」。
+                        如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
+                        如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
+                        如果問題與詐騙無關，請說「這不是詐騙」，並提供具體理由。
+                        如果找不到資訊，請建議撥打165專線，並說「這很有可能是詐騙」。
 
-                            對話歷史：
-                            {chat_history}
+                        對話歷史：
+                        {chat_history}
 
-                            背景資料：
-                            {context}
+                        背景資料：
+                        {context}
 
-                            使用者問題：
-                            {question}
+                        使用者問題：
+                        {question}
 
-                            請用繁體中文回答，語氣親切且專業。
-                            如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
-                            """
-
-        prompt = PromptTemplate(
+                        請用繁體中文回答，語氣親切且專業。
+                        如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
+                        """
+        
+        _prompt = PromptTemplate(
             input_variables=["context", "question", "chat_history"],
             template=PROMPT_TEMPLATE
         )
+    
+    return _llm, _retriever, _prompt
 
-        memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            input_key="question",  # Add this to specify what to store
-            return_messages=False
-        )
-
-        combine_docs_chain = StuffDocumentsChain(llm=llm, prompt=prompt)
-
-        _conversation_chain = ConversationalRetrievalChain(
-            retriever=retriever,
-            combine_docs_chain=combine_docs_chain,
-            memory=memory,
-            return_source_documents=True,
-            get_chat_history=lambda h: h  # Simple passthrough function
-        )
-
-    return _conversation_chain
+def query_system(question, chat_history_str=""):
+    """
+    A simplified query function that handles retrieval and response generation
+    
+    Args:
+        question (str): The user's question
+        chat_history_str (str): String representation of chat history
+        
+    Returns:
+        dict: Response containing answer and source documents
+    """
+    llm, retriever, prompt = load_model_and_components()
+    
+    if not all([llm, retriever, prompt]):
+        return {"answer": "系統載入失敗，請稍後再試。", "source_documents": []}
+    
+    # Retrieve relevant documents
+    docs = retriever.get_relevant_documents(question)
+    
+    if not docs:
+        return {"answer": "這很有可能是詐騙。我找不到相關資訊，建議您撥打165反詐騙專線諮詢。", "source_documents": []}
+    
+    # Format context from documents
+    context = "\n\n".join([doc.page_content for doc in docs])
+    
+    # Create and use LLM chain for single query
+    llm_chain = LLMChain(llm=llm, prompt=prompt)
+    
+    response = llm_chain.invoke({
+        "context": context,
+        "question": question,
+        "chat_history": chat_history_str
+    })
+    
+    return {"answer": response["text"], "source_documents": docs}
