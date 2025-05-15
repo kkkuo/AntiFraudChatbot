@@ -39,14 +39,14 @@ def load_qa_chain():
     {context}
 
     使用者問題：
-    {question}
+    {query}
 
     請用繁體中文回答，語氣親切且專業。
     如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
     """
 
     PROMPT = PromptTemplate(
-        input_variables=["context", "question"],
+        input_variables=["context", "query"],
         template=PROMPT_TEMPLATE
     )
 
