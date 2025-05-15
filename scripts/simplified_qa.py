@@ -4,7 +4,20 @@ from langchain_community.llms import HuggingFacePipeline
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import LLMChain
-from langchain.chains.combine_documents import StuffDocumentsChain
+# Fix import path for StuffDocumentsChain based on your LangChain version
+try:
+    # Try newer import path first
+    from langchain_core.documents import StuffDocumentsChain
+except ImportError:
+    try:
+        # Try community import path
+        from langchain_community.chains.combine_documents import StuffDocumentsChain
+    except ImportError:
+        # Fall back to original import path for older versions
+        try:
+            from langchain.chains.combine_documents import StuffDocumentsChain
+        except ImportError:
+            print("❌ Could not import StuffDocumentsChain from any known location")
 
 _llm = None
 _retriever = None
@@ -89,7 +102,7 @@ def query_system(question, chat_history_str=""):
     # Format context from documents
     context = "\n\n".join([doc.page_content for doc in docs])
     
-    # Create and use LLM chain for single query
+    # Create and use LLM chain for single query without StuffDocumentsChain
     llm_chain = LLMChain(llm=llm, prompt=prompt)
     
     response = llm_chain.invoke({
@@ -98,4 +111,12 @@ def query_system(question, chat_history_str=""):
         "chat_history": chat_history_str
     })
     
-    return {"answer": response["text"], "source_documents": docs}
+    # Handle different response formats
+    if isinstance(response, dict) and "text" in response:
+        answer = response["text"]
+    elif isinstance(response, str):
+        answer = response
+    else:
+        answer = str(response)
+    
+    return {"answer": answer, "source_documents": docs}
