@@ -60,6 +60,11 @@ def load_conversational_retrieval_chain():
             template=PROMPT_TEMPLATE
         )
 
+        memory = ConversationBufferMemory(
+            memory_key="chat_history",
+            return_messages=True
+        )
+
         # 建立 Chain
         _conversation_chain = ConversationalRetrievalChain.from_llm(
             llm=llm,
