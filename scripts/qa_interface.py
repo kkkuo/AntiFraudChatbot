@@ -69,7 +69,7 @@ def load_conversational_retrieval_chain():
         _conversation_chain = ConversationalRetrievalChain.from_llm(
             llm=llm,
             retriever=retriever,
-            memory=ConversationBufferMemory(return_messages=True),
+            memory=memory,
             combine_docs_chain_kwargs={"prompt": PROMPT},
             return_source_documents=True,
             verbose=False
