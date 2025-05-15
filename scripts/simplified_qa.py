@@ -55,7 +55,7 @@ def load_model_and_components():
                         如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
                         如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
                         如果問題與詐騙無關，請說「這不是詐騙」，並提供具體理由。
-                        如果找不到資訊，請建議撥打165專線，並說「這很有可能是詐騙」。
+                        如果找不到資訊，回覆「這樣的情況應該不是詐騙，如果仍有疑惑，建議撥打165專線詢問專員」。
 
                         對話歷史：
                         {chat_history}
@@ -97,7 +97,7 @@ def query_system(question, chat_history_str=""):
     docs = retriever.get_relevant_documents(question)
     
     if not docs:
-        return {"answer": "這很有可能是詐騙。我找不到相關資訊，建議您撥打165反詐騙專線諮詢。", "source_documents": []}
+        return {"answer": "這樣的情況應該不是詐騙，如果仍有疑惑，建議撥打165專線詢問專員」。", "source_documents": []}
     
     # Format context from documents
     context = "\n\n".join([doc.page_content for doc in docs])
