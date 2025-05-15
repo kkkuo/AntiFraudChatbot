@@ -4,6 +4,7 @@ from langchain_community.llms import HuggingFacePipeline
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import ConversationalRetrievalChain
+from langchain.chains.combine_documents import StuffDocumentsChain  # ✅ 加這個
 from langchain.memory import ConversationBufferMemory
 
 # 全域變數：只初始化一次
@@ -38,40 +39,42 @@ def load_conversational_retrieval_chain():
             print(f"❌ 載入 FAISS 資料庫失敗: {e}")
             return None
 
-        # Prompt 模板
+        # ✅ Prompt 模板（不用 chat_history）
         PROMPT_TEMPLATE = """你是一位專業的反詐騙諮詢助手。請根據提供的背景資料和對話歷史，清楚地回答使用者的問題。
-                            如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
-                            如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
-                            如果問題與詐騙無關，請說「這不是詐騙」，並提供具體理由。
-                            如果找不到資訊，請建議撥打165專線，並說「這很有可能是詐騙」。
+如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
+如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
+如果問題與詐騙無關，請說「這不是詐騙」，並提供具體理由。
+如果找不到資訊，請建議撥打165專線，並說「這很有可能是詐騙」。
 
-                            背景資料：
-                            {context}
+背景資料：
+{context}
 
-                            使用者問題：
-                            {question}
+使用者問題：
+{question}
 
-                            請用繁體中文回答，語氣親切且專業。
-                            如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
-                            """
+請用繁體中文回答，語氣親切且專業。
+如果有人詢問與詐騙無關的問題，請回覆：「請你去找別人聊天，不要佔用公共資源。」
+"""
 
-        PROMPT = PromptTemplate(
-            input_variables=["context", "question"],  # ✅ 多加這個
+        prompt = PromptTemplate(
+            input_variables=["context", "question"],
             template=PROMPT_TEMPLATE
         )
 
+        # ✅ 包裝成 StuffDocumentsChain（這才是 ConversationalRetrievalChain 要的格式）
+        combine_docs_chain = StuffDocumentsChain(llm=llm, prompt=prompt)
 
+        # ✅ 加入記憶體
         memory = ConversationBufferMemory(
             memory_key="chat_history",
-            return_messages=False
+            return_messages=True
         )
 
-        # 建立 Chain
-        _conversation_chain = ConversationalRetrievalChain.from_llm(
-            llm=llm,
+        # ✅ 建立完整 Chain
+        _conversation_chain = ConversationalRetrievalChain(
             retriever=retriever,
+            combine_docs_chain=combine_docs_chain,
             memory=memory,
-            combine_docs_chain_kwargs={"prompt": PROMPT},
             return_source_documents=True,
             verbose=False
         )
