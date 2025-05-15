@@ -62,13 +62,9 @@ def load_qa_chain():
 
 def run_qa(query):
     qa_chain = load_qa_chain()
-    result = qa_chain.invoke(query)
+    result = qa_chain.invoke({"query": query})
     print(result["result"])
 
-    print("相關資料來源：")
-    for doc in result["source_documents"]:
-        print(doc.page_content)
-        print("-" * 40)
 
 # 測試用
 if __name__ == "__main__":
