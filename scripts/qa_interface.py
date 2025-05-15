@@ -56,7 +56,7 @@ def load_conversational_retrieval_chain():
                             """
 
         PROMPT = PromptTemplate(
-            input_variables=["context", "question", "chat_history"],  # ✅ 多加這個
+            input_variables=["context", "question"],  # ✅ 多加這個
             template=PROMPT_TEMPLATE
         )
 
