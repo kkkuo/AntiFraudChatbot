@@ -67,7 +67,7 @@ def load_conversational_retrieval_chain():
         # ✅ 加入記憶體
         memory = ConversationBufferMemory(
             memory_key="chat_history",
-            return_messages=True
+            return_messages=False
         )
 
         # ✅ 建立完整 Chain
