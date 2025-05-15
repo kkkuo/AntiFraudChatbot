@@ -62,7 +62,7 @@ def load_qa_chain():
 
 def run_qa(query):
     qa_chain = load_qa_chain()
-    result = qa_chain.invoke({"query": query})
+    result = qa_chain.invoke(query)
     print(result["result"])
 
 
