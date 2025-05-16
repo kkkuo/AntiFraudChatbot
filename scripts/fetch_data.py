@@ -47,7 +47,7 @@ def fetch_data(save_path='data/raw.json', verbose=False):
     with open(save_path, 'w', encoding='utf-8') as f:
         json.dump(all_data, f, ensure_ascii=False, indent=4)
 
-    print(f"✅ 已儲存 {len(all_data)} 筆資料到 {save_path}")
+    print(f"已儲存 {len(all_data)} 筆資料到 {save_path}")
 
 if __name__ == "__main__":
     fetch_data(save_path='data/raw.json', verbose=True)

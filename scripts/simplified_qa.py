@@ -4,20 +4,17 @@ from langchain_community.llms import HuggingFacePipeline
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.chains import LLMChain
-# Fix import path for StuffDocumentsChain based on your LangChain version
+
 try:
-    # Try newer import path first
     from langchain_core.documents import StuffDocumentsChain
 except ImportError:
     try:
-        # Try community import path
         from langchain_community.chains.combine_documents import StuffDocumentsChain
     except ImportError:
-        # Fall back to original import path for older versions
         try:
             from langchain.chains.combine_documents import StuffDocumentsChain
         except ImportError:
-            print("❌ Could not import StuffDocumentsChain from any known location")
+            print("Could not import StuffDocumentsChain from any known location")
 
 _llm = None
 _retriever = None
@@ -27,7 +24,6 @@ def load_model_and_components():
     global _llm, _retriever, _prompt
     
     if _llm is None:
-        # Load model components
         model_id = "ziqingyang/chinese-alpaca-2-7b"
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         model = AutoModelForCausalLM.from_pretrained(
@@ -40,17 +36,15 @@ def load_model_and_components():
         _llm = HuggingFacePipeline(pipeline=pipe)
 
     if _retriever is None:
-        # Load vector database and retriever
         embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
         try:
             vectorstore = FAISS.load_local("faiss_index", embeddings=embedding_model, allow_dangerous_deserialization=True)
             _retriever = vectorstore.as_retriever()
         except Exception as e:
-            print(f"❌ 載入 FAISS 資料庫失敗: {e}")
+            print(f"載入 FAISS 資料庫失敗: {e}")
             return None, None, None
 
     if _prompt is None:
-        # Define prompt template
         PROMPT_TEMPLATE = """你是一位專業的反詐騙諮詢助手。請根據提供的背景資料和對話歷史，清楚地回答使用者的問題。
                         如果找到相關詐騙資訊，請告訴使用者「這很有可能是詐騙」，並提供一則具體的詐騙案例或相關資訊。
                         如果使用者還是認為這不是詐騙，請再提供一則案例，並建議撥打165反詐騙專線。
@@ -93,16 +87,13 @@ def query_system(question, chat_history_str=""):
     if not all([llm, retriever, prompt]):
         return {"answer": "系統載入失敗，請稍後再試。", "source_documents": []}
     
-    # Retrieve relevant documents
     docs = retriever.get_relevant_documents(question)
     
     if not docs:
         return {"answer": "這樣的情況應該不是詐騙，如果仍有疑惑，建議撥打165專線詢問專員」。", "source_documents": []}
     
-    # Format context from documents
     context = "\n\n".join([doc.page_content for doc in docs])
     
-    # Create and use LLM chain for single query without StuffDocumentsChain
     llm_chain = LLMChain(llm=llm, prompt=prompt)
     
     response = llm_chain.invoke({
@@ -110,8 +101,7 @@ def query_system(question, chat_history_str=""):
         "question": question,
         "chat_history": chat_history_str
     })
-    
-    # Handle different response formats
+
     if isinstance(response, dict) and "text" in response:
         answer = response["text"]
     elif isinstance(response, str):
