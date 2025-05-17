@@ -69,7 +69,7 @@ run_qa("有人打來說我帳戶異常，請我去 ATM 操作，這是真的嗎�
 
 向量資料庫：FAISS
 
-中文語言模型：ziqingyang/chinese-alpaca-2-7b
+中文語言模型：BAAI/bge-m3
 
 問答鏈：使用 LangChain 的 RetrievalQA
 
