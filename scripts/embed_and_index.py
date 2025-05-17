@@ -19,7 +19,7 @@ def embed_and_save_faiss_langchain():
     index_dir.mkdir(parents=True, exist_ok=True)
     vectorstore.save_local(str(index_dir))
 
-    print(f"已建立並儲存 {len(texts)} 筆資料的 FAISS index")
+    print(f"已儲存 {len(texts)} 筆資料的 FAISS index")
 
 if __name__ == "__main__":
     embed_and_save_faiss_langchain()
