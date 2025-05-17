@@ -11,7 +11,7 @@ def embed_and_save_faiss_langchain():
 
     texts = (df['CaseTitle'] + '。' + df['Summary']).tolist()
 
-    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+    embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
 
     vectorstore = FAISS.from_texts(texts, embedding=embedding_model)
 
