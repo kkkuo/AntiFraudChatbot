@@ -41,7 +41,7 @@ def load_model():
         faiss_db = FAISS.load_local("faiss_index", embedding_model, allow_dangerous_deserialization=True) #如果沒有加上allow_dangerous_deserialization會不能用之前已經跑完下載好的.pkl檔案
         retriever = faiss_db.as_retriever(search_kwargs={"k": 3})
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        chat = ConversationalRetrievalChain(
+        chat = ConversationalRetrievalChain.from_llm(
             llm=llm,
             retriever=retriever,
             memory=memory,
