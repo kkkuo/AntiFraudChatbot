@@ -7,6 +7,7 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.memory import ConversationBufferMemory
+from langchain.chains import StuffDocumentsChain, LLMChain
 
 
 llm = None
@@ -25,7 +26,21 @@ def load_model():
             torch_dtype="auto"
         )
         pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, framework = 'pt', max_new_tokens=512, do_sample=True) #max_new_tokens:限制模型回答的長度; do_sample:決定生成的文字是否會隨機取樣，False的話模型每次都只會選擇機率最高的字，回答較死板。Temperature決定的是隨機的程度
-        prompt = PromptTemplate.from_template("""
+        llm = HuggingFacePipeline(pipeline=pipe)
+        embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
+        faiss_db = FAISS.load_local("faiss_index", embedding_model, allow_dangerous_deserialization=True) #如果沒有加上allow_dangerous_deserialization會不能用之前已經跑完下載好的.pkl檔案
+        retriever = faiss_db.as_retriever(search_kwargs={"k": 3})
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+
+        prompt_qgen = PromptTemplate.from_template("""
+                "請根據對話紀錄和使用者的追問，產生一個可獨立理解的問題。\n"
+                "對話紀錄：{chat_history}\n"
+                "使用者問題：{question}\n"
+                "獨立問題：
+                                                   """)
+        question_generator_chain = LLMChain(llm=llm, prompt=prompt_qgen)
+
+        prompt_qa = PromptTemplate.from_template("""
                 你是一位專業的反詐騙諮詢助手。使用者會告訴你他遇到的情況，請根據提供的背景資料和對話歷史，清楚地回答使用者遇到的情況是不是詐騙。
                 當你在回答使用者的時候，請附上一則罪相關的案例，並告知使用者「如果還有疑慮，請撥打165專線諮詢專員」。
                 如果使用者問你詐騙以外的內容，在每句回覆後面加上與使用者傳入的內容最相關的詐騙案件。
@@ -35,18 +50,18 @@ def load_model():
                 Context : {context}
                 Answer :                                                            
                                             """)
-        llm = HuggingFacePipeline(pipeline=pipe)
+        combine_docs_chain = StuffDocumentsChain(
+            llm_chain=LLMChain(llm=llm, prompt=prompt_qa),
+            document_variable_name="context"
+        ) #用 context + 問題產生回答
         
-        embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
-        faiss_db = FAISS.load_local("faiss_index", embedding_model, allow_dangerous_deserialization=True) #如果沒有加上allow_dangerous_deserialization會不能用之前已經跑完下載好的.pkl檔案
-        retriever = faiss_db.as_retriever(search_kwargs={"k": 3})
-        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-        chat = ConversationalRetrievalChain.from_llm(
-            llm=llm,
+    
+        chat = ConversationalRetrievalChain(
+            combine_docs_chain = combine_docs_chain,
             retriever=retriever,
-            memory=memory,
-            return_source_documents=True,
-            chain_type_kwargs={"prompt": prompt}
+            question_generator = question_generator_chain,
+            memory = memory
         )
+        
         return chat
 
