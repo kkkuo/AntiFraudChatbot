@@ -1,5 +1,5 @@
 #HuggingFace models
-from langchain_huggingface import HuggingFacePipeline
+from langchain.llms import HuggingFacePipeline
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 #Langchain models
