@@ -6,14 +6,18 @@ from langchain.vectorstores import FAISS
 from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
+from langchain.memory import ConversationBufferMemory
+
+
 
 llm = None
 retriever = None
 prompt = None
+chat = None
 
 def load_model():
-    global llm, retriever, prompt
-    if llm == None:
+    global llm, retriever, prompt, chat
+    if chat is None:
         model_id = 'Qwen/Qwen3-0.6B'
         tokenizer = AutoTokenizer.from_pretrained(model_id)
         model = AutoModelForCausalLM.from_pretrained(
@@ -37,4 +41,13 @@ def load_model():
         embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
         faiss_db = FAISS.load_local("faiss_index/index.faiss", embedding_model)
         retriever = faiss_db.as_retriever(search_kwargs={"k": 3})
+        memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+        chat = ConversationalRetrievalChain(
+            llm=llm,
+            retriever=retriever,
+            memory=memory,
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": prompt}
+        )
+        return chat
 
