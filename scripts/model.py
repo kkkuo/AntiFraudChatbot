@@ -65,6 +65,5 @@ def load_model():
         )
         #param response_if_no_docs_found: str | None = None If specified, the chain will return a fixed response if no docs are found for the question.
 
-        
         return chat
 
