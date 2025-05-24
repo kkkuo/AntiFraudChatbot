@@ -29,7 +29,7 @@ def load_model():
         llm = HuggingFacePipeline(pipeline=pipe)
         embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
         faiss_db = FAISS.load_local("faiss_index", embedding_model, allow_dangerous_deserialization=True) #如果沒有加上allow_dangerous_deserialization會不能用之前已經跑完下載好的.pkl檔案
-        retriever = faiss_db.as_retriever(search_kwargs={"k": 3})
+        retriever = faiss_db.as_retriever(search_kwargs={"k": 1})
         memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
         prompt_qgen = PromptTemplate.from_template("""
@@ -42,7 +42,7 @@ def load_model():
 
         prompt_qa = PromptTemplate.from_template("""
                 你是一位專業的反詐騙諮詢助手。使用者會告訴你他遇到的情況，請根據提供的背景資料和對話歷史，清楚地回答使用者遇到的情況是不是詐騙。
-                當你在回答使用者的時候，請附上一則罪相關的案例，並告知使用者「如果還有疑慮，請撥打165專線諮詢專員」。
+                當你在回答使用者的時候，請附上一則相關案例，並告知使用者「如果還有疑慮，請撥打165專線諮詢專員」。
                 如果使用者問你詐騙以外的內容，在每句回覆後面加上與使用者傳入的內容最相關的詐騙案件。
                 如果找不到相關案例，而使用者很懷疑這是詐騙，告訴使用者撥打165專線詢問專員。
                 只能使用繁體中文回覆。 
