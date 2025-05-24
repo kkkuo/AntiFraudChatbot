@@ -1,5 +1,5 @@
 import gradio as gr
-from scripts.model import load_model
+from model import load_model
 
 chat = load_model()
 
