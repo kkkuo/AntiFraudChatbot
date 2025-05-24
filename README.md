@@ -12,67 +12,84 @@
 │   └── fraud_data.csv        # 處理後的清理資料
 │
 ├── faiss_index/              # 儲存 FAISS 向量索引
-│   └── index
+│   └── index.faiss
+│   └── index.pkl
 │
 ├── scripts/
 │   ├── fetch_data.py         # 從 API 下載詐騙資料
 │   ├── prepare_dataset.py    # 處理資料為 CSV
 │   ├── embed_and_index.py    # 嵌入文字並儲存 FAISS
-│   ├── search_interface.py   # CLI 查詢相似案例
-│   └── qa_interface.py       # 啟動 LLM + FAISS 的問答系統
+│   ├── model.py              # 啟動 LLM + FAISS 的問答
+│   └── app.py                # 啟動網頁互動式介面
 │
 ├── notebooks/
-│   └── main_workflow.ipynb   # Colab 使用流程筆記
+│   └── main_workflow.ipynb   # 使用colab執行scripts
+│
+├── requirements.txt
 └── README.md
 
 ```
+
 ## 🚀 安裝與執行
+
 ### 1️⃣ 安裝套件
+
 ```bash
 pip install -r requirements.txt
 ```
-或在 Colab 中手動安裝：
-```
-!pip install sentence-transformers langchain langchain-community faiss-cpu
-```
+
 ### 2️⃣ 執行流程
+
 #### 抓取最新詐騙案例資料
-如果不需抓取最新的資料則不需執行
+
+如果不需抓取最新的資料則不需執行。請注意，如果多次執行本段 script 會有 IP 被封鎖的風險。
+
 ```
 python scripts/fetch_data.py
 ```
+
 #### 對抓下來的資料進行前處理
-將資料留下需要的欄位，並存成csv檔
+
+將資料留下需要的欄位，並存成 csv 檔。
+
 ```
 python scripts/prepare_dataset.py
 ```
+
 #### 建立向量資料庫
-透過 LangChain 套件，將前一步驟擷取的資料建立為 FAISS 向量資料庫
+
+透過 LangChain 套件，將前一步驟擷取的資料建立為 FAISS vector database。
+
 ```
 python scripts/embed_and_index.py
 ```
-#### 啟動問答系統查詢
-結合先前建置的向量資料庫與生成式模型，完成 RAG 應用
-```
-python scripts/qa_interface.py
-```
-## 🤖 問答介面範例
+
+#### 建立多輪對話聊天系統
+
+結合先前建置的向量資料庫與生成式模型，完成 RAG 應用。
 
 ```
-from scripts.qa_interface import run_qa
+python scripts/model.py
+```
 
-run_qa("有人打來說我帳戶異常，請我去 ATM 操作，這是真的嗎？")
+## 🤖 啟動聊天界面
+
+點選 URL 後於網頁型介面與 chatbot 互動。
+
+```
+!python scripts/app.py
 ```
 
 ## 🧠 使用模型
-嵌入模型：sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+
+嵌入模型：BAAI/bge-m3
 
 向量資料庫：FAISS
 
-中文語言模型：BAAI/bge-m3
+中文語言模型：Qwen/Qwen3-0.6B
 
-問答鏈：使用 LangChain 的 RetrievalQA
+展示介面：Gradio
 
 ## 📊 資料來源
-165 全民防騙儀表板
 
+165 全民防騙儀表板

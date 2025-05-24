@@ -14,9 +14,9 @@ def chat_function(message, history):
 # 建立聊天介面
 iface = gr.ChatInterface(
     fn=chat_function,
-    title="反詐騙諮詢機器人",
+    title="反詐聊天機器人",
     description="請描述您遇到的情況，我會幫您判斷是否為詐騙。",
-    examples=["有人要我投資虛擬貨幣", "接到陌生來電說我中獎了"],
+    examples=["我在臉書上看到投資老師叫我加line好友，教我穩賺不賠的方法", "有人跟我買東西，說我給的賣貨便連結點進去有問題"],
 )
 
 if __name__ == "__main__":
