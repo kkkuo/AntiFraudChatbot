@@ -16,14 +16,11 @@
 │   └── index.pkl
 │
 ├── scripts/
-│   ├── fetch_data.py         # 從 API 下載詐騙資料
-│   ├── prepare_dataset.py    # 處理資料為 CSV
-│   ├── embed_and_index.py    # 嵌入文字並儲存 FAISS
-│   ├── model.py              # 啟動 LLM + FAISS 的問答
-│   └── app.py                # 啟動網頁互動式介面
-│
-├── notebooks/
-│   └── main_workflow.ipynb   # 使用colab執行scripts
+│   ├── fetch_data.py             # 從 API 下載詐騙資料
+│   ├── prepare_dataset.py        # 處理資料為 CSV
+│   ├── embed_and_index.py        # 嵌入文字並儲存 FAISS
+│   ├── model_gemini_version.py   # 啟動 LLM + FAISS 的問答
+│   └── app_g.py                  # 啟動網頁互動式介面
 │
 ├── requirements.txt
 └── README.md
@@ -74,10 +71,10 @@ python scripts/model.py
 
 ## 🤖 啟動聊天界面
 
-點選 URL 後於網頁型介面與 chatbot 互動。
+使用 gradio demo 互動型 chatbot。
 
 ```
-!python scripts/app.py
+!python scripts/app_g.py
 ```
 
 ## 🧠 使用模型
@@ -86,7 +83,7 @@ python scripts/model.py
 
 向量資料庫：FAISS
 
-中文語言模型：Qwen/Qwen3-0.6B
+中文語言模型：Gemini-2.0-flash
 
 展示介面：Gradio
 
