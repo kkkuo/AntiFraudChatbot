@@ -1,14 +1,15 @@
 #HuggingFace models
-from langchain.llms import HuggingFacePipeline #之後要改成langchain_huggingface
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.vectorstores import FAISS
 #Langchain models
 from langchain.chains import ConversationalRetrievalChain, StuffDocumentsChain, LLMChain #
 from langchain.prompts import PromptTemplate
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 from langchain.memory import ConversationBufferMemory
+from langchain_google_genai import ChatGoogleGenerativeAI
+import os
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 llm = None
 retriever = None
@@ -18,28 +19,11 @@ chat = None
 def load_model():
     global llm, retriever, prompt, chat
     if chat is None:
-        model_id = 'Qwen/Qwen3-4B'#Qwen/Qwen3-0.6B,
-        tokenizer = AutoTokenizer.from_pretrained(model_id)
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            device_map="auto",
-            torch_dtype="auto"
+        llm = ChatGoogleGenerativeAI(
+            model = 'gemini-2.0-flash',
+            google_api_key=os.getenv("GOOGLE_API_KEY"),
+            temperature = 0.1
         )
-        #pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, framework = 'pt', max_new_tokens=100, do_sample=True, temperature = 0.1, repetition_penalty=1.5, return_full_text = False, eos_token_id=tokenizer.eos_token_id)     # 增加重複懲罰return_full_text=False, pad_token_id=tokenizer.eos_token_id) #max_new_tokens:限制模型回答的長度; do_sample:決定生成的文字是否會隨機取樣，False的話模型每次都只會選擇機率最高的字，回答較死板。Temperature決定的是隨機的程度, 新增：pad_token_id=tokenizer.eos_token_id
-        pipe = pipeline(
-            "text-generation", 
-            model=model, 
-            tokenizer=tokenizer, 
-            framework='pt',
-            max_new_tokens=100,
-            do_sample=True,
-            temperature=0.1,
-            repetition_penalty=1.5,
-            return_full_text=False,
-            pad_token_id=tokenizer.eos_token_id,
-            eos_token_id=tokenizer.eos_token_id
-        )
-        llm = HuggingFacePipeline(pipeline=pipe)
         embedding_model = HuggingFaceEmbeddings(model_name="BAAI/bge-m3")
         faiss_db = FAISS.load_local("faiss_index", embedding_model, allow_dangerous_deserialization=True) #如果沒有加上allow_dangerous_deserialization會不能用之前已經跑完下載好的.pkl檔案
         retriever = faiss_db.as_retriever(search_kwargs={"k": 3})

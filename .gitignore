@@ -1,0 +1,9 @@
+# API keys and environment variables
+.env
+model_gemini_version_copy.py
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
