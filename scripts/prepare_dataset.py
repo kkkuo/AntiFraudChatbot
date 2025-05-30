@@ -8,7 +8,7 @@ def prepare_dataset():
     df = pd.read_json(data_dir / "raw.json")
     
     # 移除不需要的欄位
-    df_dropped = df.drop(columns=['Id', 'CityId', 'CaseDate', 'CityName'])
+    df_dropped = df.drop(columns=['Id', 'CityId', 'CityName'])
     
     # 儲存為 CSV
     df_dropped.to_csv(data_dir / "fraud_data.csv", index=False, encoding='utf-8')
